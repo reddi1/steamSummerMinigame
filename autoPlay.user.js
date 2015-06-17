@@ -337,7 +337,67 @@ function firstRun() {
 
 	enhanceTooltips();
 
+	autoSpendBadgePoints();
+
 	isPastFirstRun = true;
+}
+
+function autoSpendBadgePoints() {
+
+	document.getElementById("purchase_ability_item_template").setAttribute("onclick", null);
+	var availableBadgePoints = s().m_rgPlayerTechTree.badge_points;
+	for (var idx in s().m_rgTuningData.abilities) {
+		if(s().m_rgTuningData.abilities[idx].hasOwnProperty("badge_points_cost")) {
+			var cost = s().m_rgTuningData.abilities[idx].badge_points_cost;
+			var recommendedPurchaseBadgeItem = 0;
+			var badgeItemElement = document.getElementById("purchase_abilityitem_"+idx);
+			badgeItemElement.setAttribute("onclick", null);
+			badgeItemElement.appendChild(makeNumber("purchaseBadgeItem["+idx+"]","",recommendedPurchaseBadgeItem,0,Math.floor(availableBadgePoints/cost),updatePurchaseBadgeItems));
+		}
+	}
+	var availableBadgePointsLabel = document.createElement('span');
+	availableBadgePointsLabel.setAttribute("id","availableBadgePointsLabel");
+	availableBadgePointsLabel.innerHTML = availableBadgePoints + "/";
+	document.getElementById("num_badge_points").parentNode.insertBefore(availableBadgePointsLabel,document.getElementById("num_badge_points"));
+
+	var buyBadgePointsLabel = document.createElement('span');
+	buyBadgePointsLabel.onclick = buyBadgeItems;
+	buyBadgePointsLabel.innerHTML = " Click to buy badge items!";
+	buyBadgePointsLabel.style.setProperty('color', '#FF0000');
+	document.getElementById("num_badge_points").parentNode.appendChild(buyBadgePointsLabel);
+
+}
+
+function updatePurchaseBadgeItems(event) {
+	var availableBadgePoints = s().m_rgPlayerTechTree.badge_points;
+	for (var idx in s().m_rgTuningData.abilities) {
+		if(s().m_rgTuningData.abilities[idx].hasOwnProperty("badge_points_cost")) {
+			availableBadgePoints -= w["purchaseBadgeItem["+idx+"]"].value*s().m_rgTuningData.abilities[idx].badge_points_cost;
+		}
+	}
+	for (idx in s().m_rgTuningData.abilities) {
+		if(s().m_rgTuningData.abilities[idx].hasOwnProperty("badge_points_cost")) {
+			w["purchaseBadgeItem["+idx+"]"].max = Math.floor(availableBadgePoints/s().m_rgTuningData.abilities[idx].badge_points_cost)+w["purchaseBadgeItem["+idx+"]"].value;
+		}
+	}
+	document.getElementById("availableBadgePointsLabel").innerHTML = availableBadgePoints + "/";
+}
+
+function buyBadgeItems() {
+    //if(s().m_bUpgradesBusy)
+    //	return;
+	//s().m_bUpgradesBusy = true;
+	for (var idx in s().m_rgTuningData.abilities) {
+		if(s().m_rgTuningData.abilities[idx].hasOwnProperty("badge_points_cost")) {
+			var numItems = w["purchaseBadgeItem["+idx+"]"].value;
+			if (numItems>0) {
+				for (var i = 0, badgeItemsArray = new Array(numItems); i < numItems;) badgeItemsArray[i++] = idx;
+				s().m_rgPurchaseItemsQueue = s().m_rgPurchaseItemsQueue.concat( badgeItemsArray );
+				console.log(s().m_rgPurchaseItemsQueue);
+			}
+
+		}
+	}
 }
 
 function disableParticles() {
